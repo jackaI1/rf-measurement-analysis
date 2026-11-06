@@ -28,15 +28,16 @@ class SCPI:
         self.resource.write(command)
 
     def query(self, command):
-        """Send once, retry a delayed read; never enqueue duplicate query responses.
+        """Retry only before receiving any bytes of this ASCII/newline response.
 
-        Timeout exhaustion aborts acquisition and closes the session. Transport
-        errors other than timeout propagate immediately. No retry of writes.
+        A mid-response timeout aborts: PyVISA can discard partially read bytes,
+        and retrying then could accept a corrupted suffix as a complete response.
         """
         self.write(command)
         for attempt in range(self.retries + 1):
             try:
-                return self.resource.read()
+                first = self.resource.read_bytes(1)
+                break
             except VisaIOError as error:
                 if error.error_code != StatusCode.error_timeout:
                     raise
@@ -44,6 +45,14 @@ class SCPI:
                 if attempt == self.retries:
                     raise
                 time.sleep(self.retry_delay_s)
+        if first == b"\n":
+            return ""
+        try:
+            return first.decode(self.resource.encoding) + self.resource.read()
+        except VisaIOError as error:
+            if error.error_code == StatusCode.error_timeout:
+                self.timeout_count += 1
+            raise
 
 
 class Bench:

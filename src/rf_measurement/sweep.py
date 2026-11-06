@@ -5,7 +5,7 @@ import json
 import math
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -15,7 +15,7 @@ from .instruments import ANALYZER, GENERATOR, Bench, simulated_backend
 
 
 def utc_now():
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def save_json(path, data):
@@ -69,7 +69,7 @@ class SweepConfig:
 
 def run_sweep(config):
     config.validate()
-    started = datetime.now(timezone.utc)
+    started = datetime.now(UTC)
     folder = Path(config.output) / f"{started:%Y%m%dT%H%M%S.%fZ}-{uuid4().hex[:8]}"
     folder.mkdir(parents=True)
     backend = config.backend if config.backend is not None else simulated_backend()

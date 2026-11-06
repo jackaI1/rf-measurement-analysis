@@ -29,13 +29,18 @@ requested settings, malformed/nonfinite traces and mismatched point counts.
 
 ### Timeouts and failure records
 
-Queries write once, then allow `retries + 1` reads, with 50 ms between timeout retries.
-Only VISA's timeout status is retried; failed writes and other errors propagate.
-This handles responses that arrive late without issuing duplicate acquisitions.
-It does not replay a lost command. A timeout while a multi-chunk trace is partially
-received can consume part of the response; the resulting length/parse check then
-fails the run rather than silently saving an incomplete trace. Recovery from a
-connection loss requires a new run and, on hardware, clearing any stale device buffer.
+Queries write once, then allow `retries + 1` attempts to read the first byte, with
+50 ms between timeout retries. This driver uses newline-terminated ASCII replies.
+After the first byte arrives, the rest of the response is read once. Any timeout
+in that remainder aborts the run: PyVISA can discard already-consumed bytes when a
+read fails, and a remaining suffix can still look like a valid numeric trace.
+Never retry that suffix. A first-byte newline is treated as an empty reply, which
+trace parsing rejects. Only VISA timeout status is retried before the first byte;
+failed writes and other errors propagate immediately.
+
+This handles late responses without issuing duplicate acquisitions, but does not
+replay a lost command. Recovery from connection loss or an interrupted response
+requires a new run and, on hardware, clearing any stale device buffer.
 
 Metadata is replaced atomically on the same filesystem. A point enters the manifest
 only after its text, CSV and metadata files have been written. Completed points remain

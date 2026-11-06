@@ -63,7 +63,7 @@ def test_sweep_saves_cartesian_grid_raw_data_and_readbacks(tmp_path):
 def test_query_retries_delayed_read_without_resending_command(monkeypatch):
     with Bench(simulated_backend()) as bench:
         session = bench.generator.resource
-        real_read = session.read
+        real_read = session.read_bytes
         writes = []
         original_write = session.write
         attempts = 0
@@ -72,15 +72,15 @@ def test_query_retries_delayed_read_without_resending_command(monkeypatch):
             writes.append(command)
             return original_write(command)
 
-        def delayed_read():
+        def delayed_read(count):
             nonlocal attempts
             attempts += 1
             if attempts == 1:
                 raise VisaIOError(StatusCode.error_timeout)
-            return real_read()
+            return real_read(count)
 
         monkeypatch.setattr(session, "write", write)
-        monkeypatch.setattr(session, "read", delayed_read)
+        monkeypatch.setattr(session, "read_bytes", delayed_read)
         client = SCPI(session, retries=2, retry_delay_s=0)
         assert "SIGNAL-GENERATOR" in client.query("*IDN?")
         assert attempts == 2
@@ -183,3 +183,41 @@ def test_invalid_sweep_has_no_output_side_effects(tmp_path, changes):
     with pytest.raises(ValueError):
         run_sweep(replace(config(tmp_path), **changes))
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("timeout_call", [2, 3])
+def test_timeout_after_partial_numeric_token_never_accepts_corrupt_trace(monkeypatch, timeout_call):
+    with Bench(simulated_backend(), retries=1, retry_delay_s=0) as bench:
+        session = bench.analyzer.resource
+        session.chunk_size = 2
+        original_read = session.visalib.read
+        trace_active = False
+        trace_reads = 0
+        original_write = session.write
+
+        def observe_write(command):
+            nonlocal trace_active
+            trace_active = command == "TRAC:DATA? TRACE1"
+            return original_write(command)
+
+        def interrupt_read(session_id, count):
+            nonlocal trace_reads
+            if trace_active:
+                trace_reads += 1
+                # The first small chunk has consumed part of '-90'.
+                if trace_reads == timeout_call:
+                    raise VisaIOError(StatusCode.error_timeout)
+            return original_read(session_id, count)
+
+        monkeypatch.setattr(session, "write", observe_write)
+        monkeypatch.setattr(session.visalib, "read", interrupt_read)
+        try:
+            with pytest.raises(VisaIOError):
+                bench.trace(1e6, 20000)
+        finally:
+            # Drain the deliberately interrupted sim response for later tests.
+            monkeypatch.setattr(session.visalib, "read", original_read)
+            try:
+                session.read()
+            except VisaIOError:
+                pass
