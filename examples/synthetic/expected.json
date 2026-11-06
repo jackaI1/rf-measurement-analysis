@@ -1,0 +1,11 @@
+{
+  "gain_db": 20.0,
+  "input_p1db_dbm": -5.0,
+  "output_p1db_dbm": 14.0,
+  "iip3_dbm": 4.635744808383028,
+  "oip3_dbm": 24.635744808383027,
+  "noise_figure_db": 3.0,
+  "noise_temperature_k": 288.62607134097505,
+  "cubic_coefficient_per_mw": 0.3438947289039254,
+  "label": "Synthetic cubic amplifier, not hardware measurements"
+}
