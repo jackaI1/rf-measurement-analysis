@@ -1,0 +1,31 @@
+name: RF analysis CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.11', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked --extra dev
+      - run: uv run ruff check src tests
+      - run: uv run ruff format --check src tests
+      - run: uv run pytest --cov=rf_measurement --cov-report=term-missing --cov-report=xml -q
+      - run: uv run rf-analysis demo --output reports/ci-demo
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rf-report-python-${{ matrix.python }}
+          path: reports/ci-demo/

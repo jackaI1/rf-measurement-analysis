@@ -1,0 +1,53 @@
+{
+  "label": "Synthetic cubic amplifier, not hardware measurements",
+  "inputs": {
+    "touchstone": "examples/synthetic/amplifier.s2p",
+    "power": "examples/synthetic/power.csv",
+    "two_tone": "examples/synthetic/two_tone.csv",
+    "noise": "examples/synthetic/noise.csv"
+  },
+  "settings": {
+    "p1_fit_points": 5,
+    "ip3_max_input_dbm": null,
+    "noise_reference_k": 290.0
+  },
+  "network": {
+    "frequency_min_hz": 800000000.0,
+    "frequency_max_hz": 1200000000.0,
+    "points": 51,
+    "gain_min_db": 19.999999999999996,
+    "gain_max_db": 20.0,
+    "input_return_loss_min_db": 19.999999999999996,
+    "output_return_loss_min_db": 26.02059991327962,
+    "input_vswr_max": 1.2222222222222223,
+    "input_vswr_undefined_points": 0,
+    "output_vswr_max": 1.105263157894737,
+    "output_vswr_undefined_points": 0
+  },
+  "compression": {
+    "gain_db": 19.999966373725325,
+    "input_p1db_dbm": -4.999866620665965,
+    "output_p1db_dbm": 14.00009975305936,
+    "baseline_slope": 0.999992268345273,
+    "fit_points": 5
+  },
+  "intercept": {
+    "iip3_dbm": 4.6331626761534315,
+    "oip3_dbm": 24.627998411694122,
+    "fundamental_slope": 0.9999122126414572,
+    "im3_slope": 2.999999999999997,
+    "fundamental_intercept_db": 19.99524246865373,
+    "im3_intercept_db": 10.728510383233841,
+    "points": 11
+  },
+  "noise": {
+    "noise_figure_min_db": 3.000000000000016,
+    "noise_figure_max_db": 3.000000000000016
+  },
+  "notes": [
+    "Gain is |S21| in dB with matched reference ports.",
+    "VSWR is undefined where reflection magnitude exceeds 1; its maximum is then null.",
+    "Two-tone input is per tone; intercept is an extrapolation.",
+    "Noise figure assumes calibrated source temperatures and negligible receiver noise."
+  ]
+}
