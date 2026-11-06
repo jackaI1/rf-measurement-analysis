@@ -1,5 +1,17 @@
 # Acquisition and analysis notes
 
+## Running the examples
+
+I use these commands from the repository folder. Each command has a different job;
+installing the project does not take any readings.
+
+| Command | What it does | Where to look afterward |
+| --- | --- | --- |
+| `uv sync --locked --extra dev --python 3.12` | Installs the project and its test tools. | The local `.venv` environment. |
+| `uv run rf-sweep --frequencies 1000000 2000000 3000000 --powers -20 -10` | Records six combinations from the simulated lab equipment. | The new timestamped folder printed under `measurements/`. |
+| `uv run rf-dsp-demo` | Checks the calculations using generated tones and noise. | `measurements/dsp-demo/report.json` and the CSV files beside it. |
+| `uv run rf-analysis demo --output reports/first-run` | Generates example amplifier measurements and a report. | `reports/first-run/report/report.md`. Use a new output folder for another run. |
+
 ## Instrument control
 
 `Bench` owns one PyVISA resource manager and two message-based sessions. An exit stack
