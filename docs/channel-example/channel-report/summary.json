@@ -1,0 +1,74 @@
+{
+  "label": "Generated four-port channel with crosstalk",
+  "touchstone": "channel.s4p",
+  "ports": 4,
+  "fixture_deembedded": false,
+  "open_short_correction": false,
+  "frequency_start_ghz": 0.05,
+  "frequency_stop_ghz": 20.0,
+  "velocity_factor": 0.66,
+  "reference_impedance_ohm": 50.0,
+  "discontinuities": [
+    {
+      "distance_m": 0.039523200455430764,
+      "impedance_ohm": 75.0052764122068,
+      "deviation_ohm": 25.005276412206797,
+      "type": "high"
+    },
+    {
+      "distance_m": 0.10127820116704118,
+      "impedance_ohm": 41.77857602404058,
+      "deviation_ohm": -8.221423975959418,
+      "type": "low"
+    }
+  ],
+  "checks": [
+    {
+      "check": "insertion_loss_db",
+      "worst_value": 8.17061191068772,
+      "worst_frequency_ghz": 17.95,
+      "limit": 10.0,
+      "unit": "dB",
+      "passed": true
+    },
+    {
+      "check": "return_loss_db",
+      "worst_value": 4.9011875984361835,
+      "worst_frequency_ghz": 17.95,
+      "limit": 8.0,
+      "unit": "dB",
+      "passed": false
+    },
+    {
+      "check": "near_end_crosstalk_db",
+      "worst_value": -30.045,
+      "worst_frequency_ghz": 0.05,
+      "limit": -30.0,
+      "unit": "dB",
+      "passed": true
+    },
+    {
+      "check": "far_end_crosstalk_db",
+      "worst_value": -36.10092916355391,
+      "worst_frequency_ghz": 0.05,
+      "limit": -30.0,
+      "unit": "dB",
+      "passed": true
+    },
+    {
+      "check": "eye_height_fraction",
+      "worst_value": 0.8395756440034816,
+      "worst_frequency_ghz": NaN,
+      "limit": 0.3,
+      "unit": "fraction of swing",
+      "passed": true
+    }
+  ],
+  "all_judged_checks_passed": false,
+  "eye": {
+    "bitrate_gbps": 10.0,
+    "eye_height_fraction": 0.8395756440034816,
+    "eye_width_ui": 0.953125,
+    "best_phase_ui": 0.34375000000000006
+  }
+}

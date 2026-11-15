@@ -1,0 +1,4 @@
+check,worst_value,worst_frequency_ghz,limit,unit,passed
+insertion_loss_db,8.080011202476555,17.95,10.0,dB,True
+return_loss_db,4.782985938940939,17.9,8.0,dB,False
+eye_height_fraction,0.8354582008858947,,0.3,fraction of swing,True

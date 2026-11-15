@@ -1,0 +1,58 @@
+{
+  "label": "Generated fixture-measured lane with thru, open and short",
+  "touchstone": "fixture_lane.s2p",
+  "ports": 2,
+  "fixture_deembedded": true,
+  "open_short_correction": true,
+  "frequency_start_ghz": 0.0,
+  "frequency_stop_ghz": 20.0,
+  "velocity_factor": 0.66,
+  "reference_impedance_ohm": 50.0,
+  "discontinuities": [
+    {
+      "distance_m": 0.03705300042696632,
+      "impedance_ohm": 75.9706716700677,
+      "deviation_ohm": 25.970671670067702,
+      "type": "high"
+    },
+    {
+      "distance_m": 0.10127820116704118,
+      "impedance_ohm": 42.234966307335725,
+      "deviation_ohm": -7.765033692664275,
+      "type": "low"
+    }
+  ],
+  "checks": [
+    {
+      "check": "insertion_loss_db",
+      "worst_value": 8.080011202476555,
+      "worst_frequency_ghz": 17.95,
+      "limit": 10.0,
+      "unit": "dB",
+      "passed": true
+    },
+    {
+      "check": "return_loss_db",
+      "worst_value": 4.782985938940939,
+      "worst_frequency_ghz": 17.9,
+      "limit": 8.0,
+      "unit": "dB",
+      "passed": false
+    },
+    {
+      "check": "eye_height_fraction",
+      "worst_value": 0.8354582008858947,
+      "worst_frequency_ghz": NaN,
+      "limit": 0.3,
+      "unit": "fraction of swing",
+      "passed": true
+    }
+  ],
+  "all_judged_checks_passed": false,
+  "eye": {
+    "bitrate_gbps": 10.0,
+    "eye_height_fraction": 0.8354582008858947,
+    "eye_width_ui": 0.953125,
+    "best_phase_ui": 0.34375000000000006
+  }
+}

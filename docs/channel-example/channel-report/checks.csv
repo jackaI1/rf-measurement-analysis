@@ -1,0 +1,6 @@
+check,worst_value,worst_frequency_ghz,limit,unit,passed
+insertion_loss_db,8.17061191068772,17.95,10.0,dB,True
+return_loss_db,4.9011875984361835,17.95,8.0,dB,False
+near_end_crosstalk_db,-30.045,0.05,-30.0,dB,True
+far_end_crosstalk_db,-36.10092916355391,0.05,-30.0,dB,True
+eye_height_fraction,0.8395756440034816,,0.3,fraction of swing,True
