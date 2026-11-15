@@ -1,16 +1,6 @@
-I merged this into my existing [lifeos-desk-node project](https://github.com/jackaI1/lifeos-desk-node/tree/main/projects/rf-measurement-analysis). The current code is in `projects/rf-measurement-analysis/` there. I kept the code here so older links still work.
-
-The move keeps the original layout, including `tests/test_sweep.py`, `tests/test_dsp.py`, `tests/test_analysis.py`, `tests/test_workflow.py`. I replaced the README with the report below and left out Git history, installed dependencies, caches and generated build output from the hub copy.
-
-The 5 files of test code and supporting test helpers moved with the code. No project-specific GitHub Actions workflow was retained; the report records the omitted checks, and the test sources can be run locally from the linked folder.
-
-Omitted workflows: `rf-measurement-analysis-ci.yml`: The relocated workflow did not complete successfully within the migration batch. Local test sources remain available.
-
----
-
 # rf-measurement-analysis
 
-I built a Python tool for checking radio-frequency amplifier measurements to learn how the underlying idea works. This is a learning project.
+I built a Python tool for checking radio-frequency measurements because I wanted to understand how the numbers on a network analyzer turn into amplifier gain, distortion and noise figures. It also checks cables, circuit-board traces and test fixtures: it shows where a signal is reflected or lost, and whether the path would still carry a fast digital signal. This is a learning project.
 
 ## Try it
 
@@ -19,15 +9,16 @@ With [uv](https://docs.astral.sh/uv/getting-started/installation/) installed:
 ```bash
 uv sync --locked --extra dev --python 3.11
 uv run rf-analysis demo --output reports/first-run
+uv run rf-analysis channel-demo --output reports/channel-demo
 uv run rf-sweep --frequencies 1000000 2000000 3000000 --powers -20 -10
 uv run rf-dsp-demo
 ```
 
 Open `reports/first-run/report/report.md` in a Markdown viewer. It contains a summary table and five plots. The folder also contains CSV tables for a spreadsheet and JSON results for another script. Use a new output folder for another demo run; the generator refuses to overwrite existing input files.
 
-The sweep command captures six combinations and prints a new folder under `measurements/`. The signal-analysis command checks known tones and saves its CSV files in `measurements/dsp-demo/`. Both run without physical instruments, drivers or accounts.
+The sweep command captures six combinations and prints a new folder under `measurements/`. The signal-analysis command checks known tones and saves its CSV files in `measurements/dsp-demo/`. The channel demo writes a fixture report and a channel report under `reports/channel-demo/`. Everything runs without physical instruments, drivers or accounts.
 
-[See the included example report](docs/example-report/report.md).
+[See the included amplifier example report](docs/example-report/report.md) and [the included channel example reports](docs/channel-example/channel-report/report.md).
 
 ## Use my own exports
 
@@ -57,6 +48,34 @@ uv run rf-analysis report \
 I choose the first `--p1-fit-points` low-power points where gain is flat. For IIP3, `--ip3-max-input-dbm` limits the fit to the linear region; omitting it fits every row. The tool checks the fitted slopes and residuals, and refuses a power sweep that never reaches 1 dB compression. `summary.json` records input paths, settings and fit diagnostics. Reports replace generated files in their destination, so I keep raw measurements in a separate folder.
 
 I correct cable losses and reference input/output powers to the amplifier connectors before importing. Two-tone data must resolve the distortion above the instrument noise floor. The noise calculation assumes negligible receiver noise or measurements already corrected for it. It does not remove fixture losses or perform instrument calibration. Power and two-tone sweeps represent one operating frequency each; I keep their frequency and bias conditions consistent with the network and noise data myself.
+
+## Channel checks: reflections, loss, crosstalk and eye
+
+I added channel checks because the same Touchstone file that shows loss against frequency can also show where along a trace a reflection happens, which is how engineers look at a circuit-board trace or a test fixture. I wanted to learn that view and build it with scikit-rf rather than a commercial package.
+
+The command reads a two-port or four-port file and writes one folder with a report, tables and plots:
+
+```bash
+uv run rf-analysis channel \
+  --touchstone measurements/trace.s2p \
+  --thru measurements/fixture-thru.s2p \
+  --open measurements/fixture-open.s2p \
+  --short measurements/fixture-short.s2p \
+  --velocity-factor 0.66 \
+  --bitrate-gbps 10 \
+  --max-loss-db 10 \
+  --min-return-loss-db 8 \
+  --output reports/trace
+```
+
+- **Time-domain reflectometry (TDR)** turns S11 into an impedance against distance, so a 75 ohm section or a capacitive spot shows up at its position along the trace. `--velocity-factor` converts the round-trip time to metres; the value depends on the board material.
+- **Fixture removal** takes a thru (the fixture connected to itself) and removes the two fixture halves from the measurement. Open and short standards then correct the reflections at each port. I measured the error on generated files and put the numbers in [the method notes](docs/channel-analysis.md).
+- **Limits** judge insertion loss (how much signal is lost), return loss (how much is reflected) and, on four-port files, crosstalk between two neighbouring lanes. Each check reports its worst frequency and whether it passes.
+- **Eye diagram** sends a PRBS-7 test pattern (a long pseudo-random sequence of ones and zeros) through the channel and overlays the bits. A wide, open eye means a fast digital signal would be read reliably. The eye height is a fraction of the full swing, and the width is a fraction of one bit time.
+
+The demo writes a generated channel with a 75 ohm section, a shunt capacitor and a neighbour lane, plus a fixture lane with its thru, open and short. In the demo report, the insertion loss check passes at 8.2 dB worst case, while return loss fails at 4.9 dB near 18 GHz. I put that capacitor in on purpose to create a clear reflection, so the failure shows the tool working as intended, not a fault. The eye is 0.84 of full swing at 10 Gb/s, and the TDR finds both features, at 3.95 cm and 10.1 cm.
+
+[The channel example report](docs/channel-example/channel-report/report.md) shows the full output. The method, error table and limits are in [docs/channel-analysis.md](docs/channel-analysis.md).
 
 ## What I save
 
@@ -90,10 +109,15 @@ For noise figure, `Y = 10^((Phot - Pcold)/10)`, `Te = (Thot - Y Tcold)/(Y - 1)`,
 
 ## Tests and limits
 
-There are 5 test source files in this copy. That source count does not establish an execution result. This is a source snapshot, and running it on a new machine may need environment-specific setup.
+The test suite has 111 tests. They run on every push in GitHub Actions for Python 3.11, 3.12 and 3.13, along with a lint and formatting check. The CI step also runs both demos and uploads the reports as artifacts. The coverage gate is 90 percent, and the suite currently measures 96 percent.
 
+Limits I know about:
 
+- The sweep and channel analysis are checked against generated data and the simulator. Physical instruments and real boards have not been tested.
+- Channel checks use fixed limits that I set in the command. They are not a standard, and I do not claim they match any particular interface specification.
+- Fixture removal is exact for ideal lines and approximate for a fixture with an impedance step. The error numbers are in [the method notes](docs/channel-analysis.md).
+- The eye uses an ideal transmitter. A real link will look worse.
 
-The relocated workflow did not complete successfully within the migration batch. Local test sources remain available.
+## Where this copy lives
 
-No project-specific GitHub Actions workflow was retained. The local test sources remain in this folder.
+This repository was the original home of the project. I later moved the current working copy into my [lifeos-desk-node project](https://github.com/jackaI1/lifeos-desk-node/tree/main/projects/rf-measurement-analysis), and kept this one so older links still work.
